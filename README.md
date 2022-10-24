@@ -39,11 +39,10 @@ jobs:
           stack-name: whoami
 
           # docker stack file location
-          stack-file: .github/stack/staging.yml
+          stack-file: whoami/stack.yml
           
           # vars to substitute in stack
-          stack-vars: |
-            DOMAIN: whoami.${{ secrets.DOMAIN }}
+          stack-vars: whoami/vars.yml
 
           # grant access for specified teams
           teams: Microservices
