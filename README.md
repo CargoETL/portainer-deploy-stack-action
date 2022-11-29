@@ -7,6 +7,14 @@ Deploy your services to [Docker Swarm](https://docs.docker.com/engine/swarm/) cl
  - grant access to spicified teams
  - works via [Portainer API](https://documentation.portainer.io/archive/1.23.2/API/)
 
+## Build
+```bash
+    docker run -it --rm -v ${PWD}:/app node bash
+    cd /app
+    export NODE_OPTIONS=--openssl-legacy-provider
+    yarn all
+```
+
 ## Usage
 
 ```yaml

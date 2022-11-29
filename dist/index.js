@@ -42,9 +42,13 @@ function parsePortainerConfig() {
 }
 function parseStackConfig() {
     const varsPath = core.getInput('stack-vars');
-    const vars = varsPath
-        ? yaml.safeLoad(fs.readFileSync(varsPath, 'utf-8'))
-        : {};
+    let vars = {};
+    if (fs.existsSync(varsPath)) {
+        vars = yaml.safeLoad(fs.readFileSync(varsPath, 'utf-8'));
+    }
+    else if (varsPath) {
+        vars = yaml.safeLoad(varsPath);
+    }
     const filePath = core.getInput('stack-file', { required: true });
     const file = fs.readFileSync(filePath, 'utf-8');
     const updatePrune = core.getInput('stack-update-prune') === 'true';

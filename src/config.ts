@@ -34,11 +34,17 @@ function parsePortainerConfig(): PortainerConfig {
 
 function parseStackConfig(): StackConfig {
   const varsPath = core.getInput('stack-vars')
-  const vars = varsPath
-    ? (yaml.safeLoad(fs.readFileSync(varsPath, 'utf-8')) as {
-        [key: string]: string
-      })
-    : {}
+  let vars = {}
+
+  if (fs.existsSync(varsPath)) {
+    vars = yaml.safeLoad(fs.readFileSync(varsPath, 'utf-8')) as {
+      [key: string]: string
+    }
+  } else if (varsPath) {
+    vars = yaml.safeLoad(varsPath) as {
+      [key: string]: string
+    }
+  }
 
   const filePath = core.getInput('stack-file', {required: true})
   const file = fs.readFileSync(filePath, 'utf-8')
