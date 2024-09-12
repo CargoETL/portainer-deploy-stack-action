@@ -89,9 +89,9 @@ export class PortainerClient {
       async (error: any) => {
         return Promise.reject(
           new PortainerError(
-            error.response.status,
-            error.response.data.message,
-            error.response.data.details
+            error.response?.status || 0,
+            error.response?.data.message || `${error}`,
+            error.response?.data.details || JSON.stringify(error)
           )
         )
       }

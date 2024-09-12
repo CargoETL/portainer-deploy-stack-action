@@ -234,7 +234,8 @@ class PortainerClient {
         this.client.interceptors.response.use(response => response, 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (error) => __awaiter(this, void 0, void 0, function* () {
-            return Promise.reject(new PortainerError(error.response.status, error.response.data.message, error.response.data.details));
+            var _a, _b, _c;
+            return Promise.reject(new PortainerError(((_a = error.response) === null || _a === void 0 ? void 0 : _a.status) || 0, ((_b = error.response) === null || _b === void 0 ? void 0 : _b.data.message) || `${error}`, ((_c = error.response) === null || _c === void 0 ? void 0 : _c.data.details) || JSON.stringify(error)));
         }));
     }
     get isAuthorized() {

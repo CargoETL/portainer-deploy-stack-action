@@ -9,7 +9,7 @@ Deploy your services to [Docker Swarm](https://docs.docker.com/engine/swarm/) cl
 
 ## Build
 ```bash
-    docker run -it --rm -v ${PWD}:/app node bash
+    docker run -it --rm -v ${PWD}:/app node:16 bash
     cd /app
     export NODE_OPTIONS=--openssl-legacy-provider
     yarn all
