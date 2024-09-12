@@ -65,7 +65,8 @@ function parse() {
     const teams = core
         .getInput('teams')
         .split(',')
-        .map(x => x.trim());
+        .map(x => x.trim())
+        .filter(x => !!x);
     return {
         portainer: parsePortainerConfig(),
         stack: parseStackConfig(),

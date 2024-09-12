@@ -66,6 +66,7 @@ export function parse(): Config {
     .getInput('teams')
     .split(',')
     .map(x => x.trim())
+    .filter(x => !!x)
 
   return {
     portainer: parsePortainerConfig(),
