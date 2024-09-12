@@ -7,6 +7,11 @@ Deploy your services to [Docker Swarm](https://docs.docker.com/engine/swarm/) cl
  - grant access to spicified teams
  - works via [Portainer API](https://documentation.portainer.io/archive/1.23.2/API/)
 
+## Test
+```bash
+    node --env-file=.env.test dist/index.js
+```
+
 ## Build
 ```bash
     docker run -it --rm -v ${PWD}:/app node:16 bash

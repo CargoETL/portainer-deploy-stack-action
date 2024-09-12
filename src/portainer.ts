@@ -88,7 +88,7 @@ export class PortainerClient {
         return Promise.reject(
           new PortainerError(
             error.response?.status || 0,
-            error.response?.data.message || `${error}`,
+            error.response?.data.message || JSON.stringify(error),
             error.response?.data.details || JSON.stringify(error)
           )
         )
