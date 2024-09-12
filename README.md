@@ -12,7 +12,7 @@ Deploy your services to [Docker Swarm](https://docs.docker.com/engine/swarm/) cl
     docker run -it --rm -v ${PWD}:/app node:16 bash
     cd /app
     export NODE_OPTIONS=--openssl-legacy-provider
-    yarn all
+    npm all
 ```
 
 ## Usage
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: telemetr-me/portainer-deploy-stack-action
+      - uses: cargoetl/portainer-deploy-stack-action
         with:
           # url of Poratainer instance
           portainer-url: ${{ secrets.PORTAINER_URL }}
@@ -47,11 +47,12 @@ jobs:
           stack-name: whoami
 
           # docker stack file location
-          stack-file: whoami/stack.yml
+          stack-file: .github/stack/staging.yml
           
           # vars to substitute in stack
-          stack-vars: whoami/vars.yml
+          stack-vars: |
+            DOMAIN: whoami.${{ secrets.DOMAIN }}
 
           # grant access for specified teams
-          teams: Microservices
+          teams: Microservices, Bots House Family
 ```

@@ -32,6 +32,7 @@ export interface PatchStack {
   stack: string
   vars: {[key: string]: string}
   prune: boolean
+  pull: boolean
 }
 
 export interface InputResourceControl {
@@ -72,9 +73,6 @@ export class PortainerClient {
 
     this.client.interceptors.request.use(
       (config: AxiosRequestConfig): AxiosRequestConfig => {
-        if (!config.headers) {
-          config.headers = {}
-        }
         if (this.token) {
           config.headers['Authorization'] = `Bearer ${this.token}`
         }
@@ -175,7 +173,8 @@ export class PortainerClient {
       {
         StackFileContent: patch.stack,
         Env: env,
-        Prune: patch.prune
+        Prune: patch.prune,
+        PullImage: patch.pull
       },
       {
         params: {
