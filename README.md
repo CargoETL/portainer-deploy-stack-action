@@ -9,15 +9,12 @@ Deploy your services to [Docker Swarm](https://docs.docker.com/engine/swarm/) cl
 
 ## Test
 ```bash
-    node --env-file=.env.test dist/index.js
+    docker run -it --rm -v ${PWD}:/app -w /app node:20 bash -c 'node --env-file=.env.test dist/index.js'
 ```
 
 ## Build
 ```bash
-    docker run -it --rm -v ${PWD}:/app node:16 bash
-    cd /app
-    export NODE_OPTIONS=--openssl-legacy-provider
-    npm all
+    docker run -it --rm -v ${PWD}:/app -w /app node:20 bash -c 'NODE_OPTIONS=--openssl-legacy-provider npm run all'
 ```
 
 ## Usage

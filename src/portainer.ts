@@ -9,21 +9,13 @@ interface Swarm {
   id: string
 }
 
-interface ResourceControl {
-  id: number
-}
-
 export interface Stack {
   id: number
   name: string
-  resourceControl: ResourceControl
-}
-
-export interface InputStack {
-  endpointId: number
-  name: string
-  stack: string
-  vars: {[key: string]: string}
+  env: {
+    name: string
+    value: string
+  }[]
 }
 
 export interface PatchStack {
@@ -33,19 +25,6 @@ export interface PatchStack {
   vars: {[key: string]: string}
   prune: boolean
   pull: boolean
-}
-
-export interface InputResourceControl {
-  id: number
-  administratorsOnly?: boolean
-  public?: boolean
-  teams?: number[]
-  users?: number[]
-}
-
-export interface Team {
-  id: number
-  name: string
 }
 
 export class PortainerError extends CustomError {
@@ -119,18 +98,6 @@ export class PortainerClient {
     this.token = response.data.jwt
   }
 
-  async getTeams(): Promise<Team[]> {
-    const response = await this.client.get('/teams')
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return response.data.map((item: any) => {
-      return {
-        id: item.Id,
-        name: item.Name
-      }
-    })
-  }
-
   async getStacks(swarmId: string): Promise<Stack[]> {
     const response = await this.client.get('/stacks', {
       params: {
@@ -144,22 +111,14 @@ export class PortainerClient {
     return response.data.map((item: any) => ({
       id: item.Id,
       name: item.Name,
-      resourceControl: {
-        id: item.ResourceControl.Id
-      }
+      env: item.Env
     }))
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async setResourceControl(input: InputResourceControl): Promise<any> {
-    const response = await this.client.put(`/resource_controls/${input.id}`, {
-      AdministratorsOnly: input.administratorsOnly || false,
-      Public: input.public || false,
-      Teams: input.teams || [],
-      Users: input.users || []
-    })
+  async getStackFile(stackId: number): Promise<string> {
+    const response = await this.client.get(`/stacks/${stackId}/file`)
 
-    return response.data
+    return response.data.StackFileContent
   }
 
   async updateStack(patch: PatchStack): Promise<void> {
@@ -182,39 +141,5 @@ export class PortainerClient {
         }
       }
     )
-  }
-
-  async createStack(input: InputStack): Promise<Stack> {
-    const swarm = await this.getSwarm(input.endpointId)
-
-    const env = Object.entries(input.vars).map(([k, v]) => ({
-      name: k,
-      value: v
-    }))
-
-    const response = await this.client.post(
-      '/stacks',
-      {
-        Name: input.name,
-        StackFileContent: input.stack,
-        SwarmID: swarm.id,
-        Env: env
-      },
-      {
-        params: {
-          endpointId: input.endpointId,
-          method: 'string',
-          type: 1
-        }
-      }
-    )
-
-    return {
-      id: response.data.Id,
-      name: response.data.Name,
-      resourceControl: {
-        id: response.data.ResourceControl.Id
-      }
-    }
   }
 }

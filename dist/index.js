@@ -49,13 +49,10 @@ function parseStackConfig() {
     else if (varsPath) {
         vars = yaml.safeLoad(varsPath);
     }
-    const filePath = core.getInput('stack-file', { required: true });
-    const file = fs.readFileSync(filePath, 'utf-8');
     const updatePrune = core.getInput('stack-update-prune') === 'true';
     const pullImage = core.getInput('stack-pull-image') === 'true';
     return {
         name: core.getInput('stack-name'),
-        file,
         vars,
         updatePrune,
         pullImage
@@ -129,53 +126,28 @@ function run() {
             const swarm = yield portainer.getSwarm(cfg.portainer.endpoint);
             core.info(`get stacks of swarm cluster ${swarm.id}`);
             const stacks = yield portainer.getStacks(swarm.id);
-            let stack = stacks.find(item => item.name === cfg.stack.name);
+            const stack = stacks.find(item => item.name === cfg.stack.name);
             core.endGroup();
             if (stack) {
-                core.startGroup(`Update existing stack (id: ${stack.id})`);
+                core.startGroup(`Update stack (id: ${stack.id})`);
+                const file = yield portainer.getStackFile(stack.id);
+                const vars = {};
+                for (const { name, value } of stack.env) {
+                    vars[name] = value;
+                }
                 yield portainer.updateStack({
                     id: stack.id,
                     endpointId: cfg.portainer.endpoint,
-                    stack: cfg.stack.file,
-                    vars: cfg.stack.vars || {},
+                    stack: file,
+                    vars: Object.assign(Object.assign({}, vars), (cfg.stack.vars || {})),
                     prune: cfg.stack.updatePrune,
                     pull: cfg.stack.pullImage
                 });
                 core.endGroup();
+                core.setOutput('stack-id', stack.id);
             }
             else {
-                core.startGroup('Create new stack');
-                stack = yield portainer.createStack({
-                    endpointId: cfg.portainer.endpoint,
-                    name: cfg.stack.name,
-                    stack: cfg.stack.file,
-                    vars: cfg.stack.vars || {}
-                });
-                core.endGroup();
-            }
-            core.setOutput('stack-id', stack.id);
-            if (cfg.teams && cfg.teams.length > 0) {
-                core.startGroup('Set Permissions');
-                const teams = yield portainer.getTeams();
-                // create index of team name -> id
-                const teamsByName = teams.reduce((idx, val) => {
-                    idx[val.name] = val.id;
-                    return idx;
-                }, {});
-                // get team ids
-                const teamIds = (cfg.teams || []).map(team => {
-                    const teamId = teamsByName[team];
-                    if (!teamId) {
-                        throw new Error(`team ${team} not found`);
-                    }
-                    return teamId;
-                });
-                core.info(`allow access for teams: ${teamIds.join(',')}`);
-                yield portainer.setResourceControl({
-                    id: stack.resourceControl.id,
-                    teams: teamIds
-                });
-                core.endGroup();
+                core.setFailed(`Stack ${cfg.stack.name} not found!`);
             }
         }
         catch (error) {
@@ -259,18 +231,6 @@ class PortainerClient {
             this.token = response.data.jwt;
         });
     }
-    getTeams() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const response = yield this.client.get('/teams');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return response.data.map((item) => {
-                return {
-                    id: item.Id,
-                    name: item.Name
-                };
-            });
-        });
-    }
     getStacks(swarmId) {
         return __awaiter(this, void 0, void 0, function* () {
             const response = yield this.client.get('/stacks', {
@@ -284,22 +244,14 @@ class PortainerClient {
             return response.data.map((item) => ({
                 id: item.Id,
                 name: item.Name,
-                resourceControl: {
-                    id: item.ResourceControl.Id
-                }
+                env: item.Env
             }));
         });
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setResourceControl(input) {
+    getStackFile(stackId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield this.client.put(`/resource_controls/${input.id}`, {
-                AdministratorsOnly: input.administratorsOnly || false,
-                Public: input.public || false,
-                Teams: input.teams || [],
-                Users: input.users || []
-            });
-            return response.data;
+            const response = yield this.client.get(`/stacks/${stackId}/file`);
+            return response.data.StackFileContent;
         });
     }
     updateStack(patch) {
@@ -318,34 +270,6 @@ class PortainerClient {
                     endpointId: patch.endpointId
                 }
             });
-        });
-    }
-    createStack(input) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const swarm = yield this.getSwarm(input.endpointId);
-            const env = Object.entries(input.vars).map(([k, v]) => ({
-                name: k,
-                value: v
-            }));
-            const response = yield this.client.post('/stacks', {
-                Name: input.name,
-                StackFileContent: input.stack,
-                SwarmID: swarm.id,
-                Env: env
-            }, {
-                params: {
-                    endpointId: input.endpointId,
-                    method: 'string',
-                    type: 1
-                }
-            });
-            return {
-                id: response.data.Id,
-                name: response.data.Name,
-                resourceControl: {
-                    id: response.data.ResourceControl.Id
-                }
-            };
         });
     }
 }
