@@ -1,3 +1,4 @@
+import * as https from 'https'
 import axios, {AxiosInstance, AxiosRequestConfig} from 'axios'
 import {CustomError} from 'ts-custom-error'
 
@@ -47,7 +48,10 @@ export class PortainerClient {
     }
 
     this.client = axios.create({
-      baseURL: url.toString()
+      baseURL: url.toString(),
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
     })
 
     this.client.interceptors.request.use(
